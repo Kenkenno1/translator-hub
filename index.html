@@ -287,6 +287,13 @@
         icon: '',
         flag: '🗂️',
       },
+      {
+        name: '文件/圖片翻譯',
+        desc: 'PPTX·DOCX·XLSX 文字+OCR 雙軌翻譯',
+        url: 'https://kenkenno1.github.io/text_and_OCR_translation/translated-app-v5-%E9%9B%99%E8%BB%8COCR%E6%95%B4%E5%90%88__Codex.html',
+        icon: '',
+        flag: '📄',
+      },
     ];
 
     // Render cards
@@ -298,7 +305,9 @@
       a.target = '_blank';
       a.rel = 'noopener';
       a.innerHTML = `
-        <img class="app-icon" src="${app.icon}" alt="${app.name}" loading="lazy" />
+        ${app.icon
+          ? `<img class="app-icon" src="${app.icon}" alt="${app.name}" loading="lazy" />`
+          : `<span class="app-icon" style="display:flex;align-items:center;justify-content:center;font-size:28px">${app.flag}</span>`}
         <div class="app-info">
           <div class="app-name">${app.flag} ${app.name}</div>
           <div class="app-desc">${app.desc}</div>
