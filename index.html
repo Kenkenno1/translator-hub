@@ -177,10 +177,11 @@
     const APPS = [
       {
         name: '圖片辨譯',
-        desc: '圖片 OCR → 翻譯 → 自動潤稿',
+        desc: '',
         url: 'https://kenkenno1.github.io/translator-hub/辨譯_fixed.html',
         icon: '',
         flag: '🔍',
+        customIcon: `<span class="app-icon" style="display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#6ee7b7 0%,#3b82f6 100%);border-radius:14px"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></span>`,
       },
       {
         name: '多語翻譯',
@@ -190,64 +191,64 @@
         flag: '🌐',
       },
       {
-        name: '會議翻譯（中日）',
-        desc: '中日會議即時口譯',
+        name: '中日口譯',
+        desc: '',
         url: 'https://kenkenno1.github.io/meeting-translator/',
         icon: 'https://kenkenno1.github.io/meeting-translator/icon-180.png?v=2',
         flag: '🤝',
       },
       {
-        name: '會議翻譯（中英）',
-        desc: '中英會議即時口譯',
+        name: '中英口譯',
+        desc: '',
         url: 'https://kenkenno1.github.io/EN-meeting/',
         icon: 'https://kenkenno1.github.io/EN-meeting/icon-180.png?v=1',
         flag: '🤝',
       },
       {
-        name: '會議翻譯（中韓）',
-        desc: '中韓會議即時口譯',
+        name: '中韓口譯',
+        desc: '',
         url: 'https://kenkenno1.github.io/meeting-translator-zh-ko/',
         icon: 'https://kenkenno1.github.io/meeting-translator-zh-ko/icon-180.png?v=1',
         flag: '🤝',
       },
       {
-        name: '會議翻譯（中泰）',
-        desc: '中泰會議即時口譯',
+        name: '中泰口譯',
+        desc: '',
         url: 'https://kenkenno1.github.io/meeting-translator-zh-th/',
         icon: 'https://kenkenno1.github.io/meeting-translator-zh-th/icon-180.png?v=1',
         flag: '🤝',
       },
       {
-        name: '會議翻譯（中菲）',
-        desc: '中菲會議即時口譯',
+        name: '中菲口譯',
+        desc: '',
         url: 'https://kenkenno1.github.io/meeting-translator-zh-fil/',
         icon: 'https://kenkenno1.github.io/meeting-translator-zh-fil/icon-180.png?v=1',
         flag: '🤝',
       },
       {
-        name: '會議翻譯（中越）',
-        desc: '中越會議即時口譯',
+        name: '中越口譯',
+        desc: '',
         url: 'https://kenkenno1.github.io/meeting-translator-zh-vie/',
         icon: 'https://kenkenno1.github.io/meeting-translator-zh-vie/icon-180.png?v=1',
         flag: '🤝',
       },
       {
-        name: '多格式文件翻譯（精準版）',
-        desc: 'Office 文件翻譯 v19.3',
+        name: '文件檔翻譯（格式精準）',
+        desc: '',
         url: 'https://kenkenno1.github.io/Office-translator-precision/v19-3.html',
         icon: '',
         flag: '🗂️',
       },
       {
-        name: '多格式文件翻譯（多輪版）',
-        desc: 'Office 文件翻譯 v19.4',
+        name: '文件檔翻譯（可潤稿）',
+        desc: '',
         url: 'https://kenkenno1.github.io/Office-translator-precision/v19-4.html',
         icon: '',
         flag: '🗂️',
       },
       {
-        name: '文件/圖片翻譯',
-        desc: 'PPTX·DOCX·XLSX 文字+OCR 雙軌翻譯',
+        name: '文件檔翻譯（圖文辨識翻譯）',
+        desc: '',
         url: 'https://kenkenno1.github.io/text_and_OCR_translation/translated-app-v5-%E9%9B%99%E8%BB%8COCR%E6%95%B4%E5%90%88__Codex.html',
         icon: '',
         flag: '📄',
@@ -263,9 +264,11 @@
       a.target = '_blank';
       a.rel = 'noopener';
       a.innerHTML = `
-        ${app.icon
-          ? `<img class="app-icon" src="${app.icon}" alt="${app.name}" loading="lazy" />`
-          : `<span class="app-icon" style="display:flex;align-items:center;justify-content:center;font-size:28px">${app.flag}</span>`}
+        ${app.customIcon
+          ? app.customIcon
+          : app.icon
+            ? `<img class="app-icon" src="${app.icon}" alt="${app.name}" loading="lazy" />`
+            : `<span class="app-icon" style="display:flex;align-items:center;justify-content:center;font-size:28px">${app.flag}</span>`}
         <div class="app-info">
           <div class="app-name">${app.flag} ${app.name}</div>
           <div class="app-desc">${app.desc}</div>
