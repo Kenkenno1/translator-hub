@@ -178,9 +178,10 @@ voice_translator_pwa/
 - Translation endpoint 不發 VAD events（已驗證 OpenAI 官方文件），client-side RMS detection 是唯一的 silence/budget guard
 - RMS baseline 校準在使用者邊講話邊連線時會把 threshold 推高，但設計上偏保守（threshold 高 → 更容易斷線 → 預算更安全）
 - 計費精確值需上線後跟 OpenAI 帳單對帳
-- Worker rate limit 用 in-memory `Map`，cold start 會清空（個人用可接受，要硬要升 KV/DO）
+- Worker rate limit 用 in-memory `Map`，屬於 per-isolate best-effort：多個 Cloudflare isolates 會稀釋 hit count，cold start 也會清空（個人用可接受，要硬上限需升 KV/DO）
 
 ## 版本
 
+- **v1.1.1** — 2026-05-10 — 設定表單同步 hardening：測試 Worker 連線、喇叭測試、開始翻譯前都會先把 drawer 內的 Worker URL / PIN / mic mode / silence timeout 寫回 settings + localStorage，避免「測試成功但未關設定」時下一步仍讀舊設定；`CACHE_NAME` bump 至 `voice-translator-v3`。補準 Worker rate limit caveat：in-memory limiter 是 per-isolate best-effort，不是全域硬上限。
 - **v1.1.0** — 2026-05-10 — Patch series A-F：silence contract（RMS baseline + p90 校準 + 移除 dead VAD/transcript fallback）、warning timer leak fix、cost meter 10s 保留、graceful `session.close`（user_stop 2s window）、worker rate limit reorder + 2KB body cap、speaker test 改 mic+audio element 模擬真實 routing、iOS banner 加強、CACHE_NAME 治理。備份：`app(backup-2026-05-10-v1.0.0).js`
 - **v1.0.0** — 2026-05-10 — 初版（6 個 patch 之前的 baseline）

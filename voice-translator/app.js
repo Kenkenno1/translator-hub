@@ -221,10 +221,7 @@ function clearTranscripts() {
 
 // ===================== Settings drawer =====================
 
-function openDrawer() {
-  dom.settingsDrawer.hidden = false;
-  dom.drawerBackdrop.hidden = false;
-  // populate
+function populateSettingsControls() {
   dom.cfgWorkerUrl.value = settings.workerUrl;
   dom.cfgPin.value = settings.pin;
   dom.cfgSilence.value = settings.silenceTimeoutSec;
@@ -234,14 +231,24 @@ function openDrawer() {
   ).checked = true;
 }
 
-function closeDrawer() {
-  // persist current values
+function openDrawer() {
+  dom.settingsDrawer.hidden = false;
+  dom.drawerBackdrop.hidden = false;
+  populateSettingsControls();
+}
+
+function syncSettingsFromControls({ persist = false } = {}) {
   settings.workerUrl = dom.cfgWorkerUrl.value.trim();
   settings.pin = dom.cfgPin.value;
   settings.silenceTimeoutSec = parseInt(dom.cfgSilence.value, 10) || 30;
   const checked = document.querySelector('input[name="mic-mode"]:checked');
   if (checked) settings.micMode = checked.value;
-  saveSettings(settings);
+  if (persist) saveSettings(settings);
+  return settings;
+}
+
+function closeDrawer() {
+  syncSettingsFromControls({ persist: true });
   dom.settingsDrawer.hidden = true;
   dom.drawerBackdrop.hidden = true;
 }
@@ -316,6 +323,8 @@ function buildMicConstraints() {
 }
 
 dom.speakerTestBtn.addEventListener('click', async () => {
+  syncSettingsFromControls({ persist: true });
+
   // Reentry guard: no concurrent speaker tests, no overlap with an in-flight
   // test that hasn't torn down yet.
   if (speakerTestRunning) {
@@ -415,8 +424,9 @@ dom.speakerTestBtn.addEventListener('click', async () => {
 // ===================== Worker test connection =====================
 
 dom.testConnectionBtn.addEventListener('click', async () => {
-  const url = dom.cfgWorkerUrl.value.trim();
-  const pin = dom.cfgPin.value;
+  syncSettingsFromControls({ persist: true });
+  const url = settings.workerUrl;
+  const pin = settings.pin;
   const result = dom.testConnectionResult;
   result.hidden = false;
   result.className = 'test-result';
@@ -479,6 +489,8 @@ dom.micBtn.addEventListener('click', async () => {
 // ===================== Session lifecycle =====================
 
 async function startSession() {
+  syncSettingsFromControls({ persist: true });
+
   // Reject if speaker test is in flight — both write dom.audio.srcObject and
   // both call getUserMedia. Wait the ~1.5s test out instead of racing.
   if (speakerTestRunning) {
@@ -1052,6 +1064,7 @@ if ('serviceWorker' in navigator) {
 
 setState('idle');
 resetSilenceRing();
+populateSettingsControls();
 maybeShowIosBanner();
 dom.targetLangLabel.textContent =
   LANG_LABELS[dom.targetLang.value] || dom.targetLang.value;
