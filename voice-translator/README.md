@@ -182,6 +182,7 @@ voice_translator_pwa/
 
 ## 版本
 
+- **v1.1.8** — 2026-05-10 — 使用者介面改成英文：主畫面、settings drawer、toast/error 文案、manifest/PWA 名稱與空 transcript placeholder 全部英文化；`CACHE_NAME` bump 至 `voice-translator-v10`。
 - **v1.1.7** — 2026-05-10 — Worker upstream JSON parse hardening（OpenAI 200/非 JSON 時回 `502 upstream_invalid_json`）、`startSession` cancellation token（避免 connecting 期間取消後舊 async flow 又啟動付費 WebRTC session）、remote audio `play()` 失敗 toast、live/connecting/closing 鎖住目標語言、Service Worker 只清 `voice-translator-*` cache 避免刪同 origin 其他 app cache；`CACHE_NAME` bump 至 `voice-translator-v9`。
 - **v1.1.6** — 2026-05-10 — PIN persistence 再加保守保存路徑：`input` / `change` / `blur` 都會保存，離開頁面時若設定 drawer 開著也會同步，降低手機瀏覽器事件差異造成 PIN 沒記住的風險；`CACHE_NAME` bump 至 `voice-translator-v8`。
 - **v1.1.5** — 2026-05-10 — 固定 Cloudflare Worker URL（公開部署資訊，不再要求使用者手填）；Worker PIN 仍只存在使用者裝置 localStorage，並在輸入時立即保存，做到每台裝置輸入一次後長期記住；`CACHE_NAME` bump 至 `voice-translator-v7`。

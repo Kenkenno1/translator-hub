@@ -1,5 +1,5 @@
 /**
- * 即時翻譯 PWA — Realtime client
+ * Voice Translator PWA — Realtime client
  *
  * Flow:
  *   1. Tap mic → fetch ephemeral from Cloudflare Worker
@@ -47,18 +47,18 @@ const GRACEFUL_CLOSE_TIMEOUT_MS = 2000;
 
 const LANG_LABELS = {
   en: 'English',
-  ja: '日本語',
-  ko: '한국어',
-  es: 'Español',
-  fr: 'Français',
-  de: 'Deutsch',
-  pt: 'Português',
-  it: 'Italiano',
-  ru: 'Русский',
-  hi: 'हिन्दी',
-  id: 'Indonesia',
-  vi: 'Tiếng Việt',
-  zh: '中文',
+  ja: 'Japanese',
+  ko: 'Korean',
+  es: 'Spanish',
+  fr: 'French',
+  de: 'German',
+  pt: 'Portuguese',
+  it: 'Italian',
+  ru: 'Russian',
+  hi: 'Hindi',
+  id: 'Indonesian',
+  vi: 'Vietnamese',
+  zh: 'Chinese',
 };
 
 // ===================== DOM refs =====================
@@ -186,12 +186,12 @@ function setState(next) {
   const pill = dom.statePill;
   pill.className = 'state-pill state-' + next;
   pill.textContent = {
-    idle: '待機中',
-    connecting: '連線中…',
-    live: '🔴 翻譯中',
-    closing: '結束中…',
-    silenced: '無聲斷線',
-    error: '錯誤',
+    idle: 'Idle',
+    connecting: 'Connecting...',
+    live: 'Live translation',
+    closing: 'Closing...',
+    silenced: 'Disconnected for silence',
+    error: 'Error',
   }[next] || next;
 
   dom.micBtn.classList.toggle('live', next === 'live');
@@ -203,17 +203,17 @@ function setState(next) {
   );
   dom.micBtn.setAttribute(
     'aria-label',
-    next === 'live' ? '結束翻譯' : '開始翻譯',
+    next === 'live' ? 'Stop translation' : 'Start translation',
   );
   dom.targetLang.disabled =
     next === 'connecting' || next === 'live' || next === 'closing';
   dom.micHint.textContent = {
-    idle: '輕觸開始，再輕觸結束',
-    connecting: '連線中…',
-    live: '小聲講話即可，喇叭會放出翻譯',
-    closing: '結束中…（讓最後一句譯完）',
-    silenced: '已自動斷線（無聲）。輕觸再開始',
-    error: '發生錯誤，請查看詳情',
+    idle: 'Tap to start. Tap again to stop.',
+    connecting: 'Connecting...',
+    live: 'Speak softly. The translation will play through the speaker.',
+    closing: 'Closing... finishing the last translation',
+    silenced: 'Auto-disconnected for silence. Tap to start again.',
+    error: 'Something went wrong. Check the details.',
   }[next] || '';
 }
 
@@ -339,7 +339,7 @@ dom.targetLang.addEventListener('change', () => {
   dom.targetLangLabel.textContent =
     LANG_LABELS[dom.targetLang.value] || dom.targetLang.value;
   if (session.state === 'live' || session.state === 'connecting') {
-    toast('語言切換需重新連線。請先停止再開始。', 'warn');
+    toast('Changing language requires a new connection. Stop and start again.', 'warn');
   }
 });
 
@@ -374,7 +374,7 @@ dom.speakerTestBtn.addEventListener('click', async () => {
   // Reentry guard: no concurrent speaker tests, no overlap with an in-flight
   // test that hasn't torn down yet.
   if (speakerTestRunning) {
-    toast('喇叭測試進行中，請稍候。', 'warn');
+    toast('Speaker test is already running. Please wait.', 'warn');
     return;
   }
   // Don't run the test mid-session — it would hijack dom.audio.srcObject and
@@ -384,7 +384,7 @@ dom.speakerTestBtn.addEventListener('click', async () => {
     session.state !== 'silenced' &&
     session.state !== 'error'
   ) {
-    toast('請先停止目前的翻譯再做喇叭測試。', 'warn');
+    toast('Stop the current translation before running the speaker test.', 'warn');
     return;
   }
 
@@ -435,7 +435,7 @@ dom.speakerTestBtn.addEventListener('click', async () => {
     osc.stop(testAudioCtx.currentTime + 0.65);
 
     toast(
-      '喇叭測試：應該聽到一聲清楚嗶聲（與真實翻譯走相同音訊路徑）。如果很小聲或從聽筒出來，請改用 Safari 分頁、藍牙喇叭或耳機，再開始計費 session。',
+      'Speaker test: you should hear a clear beep through the same audio path used by real translation. If it is quiet or comes from the earpiece, use a Safari tab, Bluetooth speaker, or headphones before starting a paid session.',
       'info',
       7000,
     );
@@ -448,7 +448,7 @@ dom.speakerTestBtn.addEventListener('click', async () => {
     });
   } catch (e) {
     console.error('[speaker test] error:', e);
-    toast('喇叭測試失敗：' + (e.message || e.name || e), 'error');
+    toast('Speaker test failed: ' + (e.message || e.name || e), 'error');
   } finally {
     // Teardown — release mic and audio element. CRITICAL: only clear
     // dom.audio.srcObject if it's STILL our test stream. If something else
@@ -476,11 +476,11 @@ dom.testConnectionBtn.addEventListener('click', async () => {
   const result = dom.testConnectionResult;
   result.hidden = false;
   result.className = 'test-result';
-  result.textContent = '測試中…';
+  result.textContent = 'Testing...';
 
   if (!url) {
     result.className = 'test-result fail';
-    result.textContent = '請先填入 Worker URL。';
+    result.textContent = 'Worker URL is missing.';
     return;
   }
 
@@ -489,7 +489,7 @@ dom.testConnectionBtn.addEventListener('click', async () => {
     const ping = await fetch(url.replace(/\/$/, '') + '/');
     if (!ping.ok) {
       result.className = 'test-result fail';
-      result.textContent = `Worker 健康檢查失敗：HTTP ${ping.status}`;
+      result.textContent = `Worker health check failed: HTTP ${ping.status}`;
       return;
     }
 
@@ -502,21 +502,21 @@ dom.testConnectionBtn.addEventListener('click', async () => {
     const data = await resp.json().catch(() => ({}));
     if (!resp.ok) {
       result.className = 'test-result fail';
-      result.textContent = `失敗：HTTP ${resp.status} — ${data.error || '未知錯誤'}${
+      result.textContent = `Failed: HTTP ${resp.status} — ${data.error || 'unknown error'}${
         data.detail ? '\n' + data.detail : ''
       }`;
       return;
     }
     if (!data.ephemeral) {
       result.className = 'test-result fail';
-      result.textContent = '回應缺少 ephemeral 欄位：' + JSON.stringify(data).slice(0, 200);
+    result.textContent = 'Response is missing the ephemeral field: ' + JSON.stringify(data).slice(0, 200);
       return;
     }
     result.className = 'test-result ok';
-    result.textContent = `成功！已取得 ephemeral token（前 12 碼：${data.ephemeral.slice(0, 12)}…）。`;
+    result.textContent = `Success. Ephemeral token received (first 12 chars: ${data.ephemeral.slice(0, 12)}...).`;
   } catch (e) {
     result.className = 'test-result fail';
-    result.textContent = '網路錯誤：' + e.message;
+    result.textContent = 'Network error: ' + e.message;
   }
 });
 
@@ -579,11 +579,11 @@ async function startSession() {
   // Reject if speaker test is in flight — both write dom.audio.srcObject and
   // both call getUserMedia. Wait the ~1.5s test out instead of racing.
   if (speakerTestRunning) {
-    toast('喇叭測試進行中，請稍候再開始翻譯。', 'warn');
+    toast('Speaker test is running. Please wait before starting translation.', 'warn');
     return;
   }
   if (!settings.workerUrl || !settings.pin) {
-    toast('請先到設定填入 Worker URL 和 PIN。', 'warn', 4000);
+    toast('Open Settings and enter the Worker PIN first.', 'warn', 4000);
     openDrawer();
     return;
   }
@@ -591,7 +591,7 @@ async function startSession() {
   setState('connecting');
   clearTranscripts();
   // Reset cost meter at tap (not at SDP success) so the previous session's
-  // "本次費用（已結束）" label doesn't linger while connecting.
+  // "Session cost (ended)" label doesn't linger while connecting.
   resetCostMeter();
   dom.targetLangLabel.textContent =
     LANG_LABELS[dom.targetLang.value] || dom.targetLang.value;
@@ -622,12 +622,12 @@ async function startSession() {
     if (!tokenResp.ok) {
       const errBody = await tokenResp.json().catch(() => ({}));
       throw new Error(
-        `Worker 取 token 失敗：HTTP ${tokenResp.status} — ${errBody.error || ''}`,
+        `Worker token request failed: HTTP ${tokenResp.status} — ${errBody.error || ''}`,
       );
     }
     const { ephemeral } = await tokenResp.json();
     if (abortIfCancelled()) return;
-    if (!ephemeral) throw new Error('Worker 回應缺少 ephemeral');
+    if (!ephemeral) throw new Error('Worker response is missing ephemeral');
 
     // 3. RTCPeerConnection
     pc = new RTCPeerConnection();
@@ -643,7 +643,7 @@ async function startSession() {
         dom.audio.play().catch((e) => {
           console.warn('autoplay failed:', e);
           toast(
-            '音訊播放被瀏覽器擋下，請點擊頁面任意處啟動。翻譯仍在進行（仍計費）。',
+            'Audio playback was blocked by the browser. Tap anywhere on the page to enable audio. Translation is still running and still billable.',
             'error',
             8000,
           );
@@ -657,7 +657,7 @@ async function startSession() {
       if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
         if (session.state === 'live' || session.state === 'connecting') {
           stopSession('connection_lost');
-          toast('連線中斷', 'error');
+          toast('Connection lost', 'error');
           setState('error');
         }
       }
@@ -699,7 +699,7 @@ async function startSession() {
     if (abortIfCancelled()) return;
     if (!sdpResp.ok) {
       const text = await sdpResp.text();
-      throw new Error(`SDP 交換失敗：HTTP ${sdpResp.status} — ${text.slice(0, 200)}`);
+      throw new Error(`SDP exchange failed: HTTP ${sdpResp.status} — ${text.slice(0, 200)}`);
     }
     const answerSdp = await sdpResp.text();
     if (abortIfCancelled()) return;
@@ -719,7 +719,7 @@ async function startSession() {
       return;
     }
     console.error('[startSession] failed', err);
-    toast('啟動失敗：' + err.message, 'error', 6000);
+    toast('Start failed: ' + err.message, 'error', 6000);
     setState('error');
     cleanup();
   }
@@ -749,7 +749,7 @@ async function stopSession(reason) {
     setState('silenced');
     // Use the user's actual silence-timeout setting, not a hardcoded "30s".
     toast(
-      `${settings.silenceTimeoutSec} 秒無聲，已自動斷線`,
+      `${settings.silenceTimeoutSec} seconds of silence. Auto-disconnected.`,
       'info',
       4000,
     );
@@ -859,15 +859,15 @@ function cleanup() {
   resetSilenceRing();
   dom.micWrap.classList.remove('warning');
 
-  // Cost meter: keep visible for 10s with a "(已結束)" marker so the user
+  // Cost meter: keep visible for 10s with an "(ended)" marker so the user
   // can see the final cost. A new session starting before 10s clears this
   // immediately (see startCostMeter).
   if (dom.costMeter && !dom.costMeter.hidden) {
-    if (dom.costLabel) dom.costLabel.textContent = '本次費用（已結束）';
+    if (dom.costLabel) dom.costLabel.textContent = 'Session cost (ended)';
     if (session.costMeterHideTimer) clearTimeout(session.costMeterHideTimer);
     session.costMeterHideTimer = setTimeout(() => {
       dom.costMeter.hidden = true;
-      if (dom.costLabel) dom.costLabel.textContent = '本次費用';
+      if (dom.costLabel) dom.costLabel.textContent = 'Session cost';
       session.costMeterHideTimer = null;
     }, 10_000);
   }
@@ -913,7 +913,7 @@ function handleServerEvent(ev) {
   if (type === 'error' || (msg.error && type !== '')) {
     console.warn('[server error]', msg);
     toast(
-      '伺服器錯誤：' + (msg.error?.message || JSON.stringify(msg).slice(0, 100)),
+      'Server error: ' + (msg.error?.message || JSON.stringify(msg).slice(0, 100)),
       'error',
     );
     return;
@@ -1097,7 +1097,7 @@ function resetSilenceRing() {
 /**
  * Cancel any pending "hide previous session's final cost" timer, reset the
  * label and displayed values, and hide the meter. Used at tap (so the previous
- * session's "(已結束)" doesn't linger while connecting) and as a defensive
+ * session's "(ended)" doesn't linger while connecting) and as a defensive
  * reset point. Idempotent.
  */
 function resetCostMeter() {
@@ -1105,7 +1105,7 @@ function resetCostMeter() {
     clearTimeout(session.costMeterHideTimer);
     session.costMeterHideTimer = null;
   }
-  if (dom.costLabel) dom.costLabel.textContent = '本次費用';
+  if (dom.costLabel) dom.costLabel.textContent = 'Session cost';
   if (dom.costValue) dom.costValue.textContent = '$0.0000';
   if (dom.costDuration) dom.costDuration.textContent = '0:00';
   dom.costMeter.hidden = true;
@@ -1113,7 +1113,7 @@ function resetCostMeter() {
 
 function startCostMeter() {
   // Defensive: in case caller skipped resetCostMeter(), make sure no stale
-  // hide timer or "(已結束)" label is around when we go live.
+  // hide timer or "(ended)" label is around when we go live.
   resetCostMeter();
   dom.costMeter.hidden = false;
   updateCost();

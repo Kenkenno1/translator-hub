@@ -1,8 +1,8 @@
 {
-  "name": "即時翻譯 — 中文語音翻譯",
-  "short_name": "即時翻譯",
-  "description": "中文語音即時翻譯成 13 種語言。使用 OpenAI gpt-realtime-translate。",
-  "lang": "zh-Hant-TW",
+  "name": "Voice Translator — Chinese Speech Translation",
+  "short_name": "Voice Translator",
+  "description": "Real-time Chinese speech translation into 13 target languages using OpenAI gpt-realtime-translate.",
+  "lang": "en",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

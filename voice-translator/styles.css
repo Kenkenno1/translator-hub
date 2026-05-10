@@ -1,5 +1,5 @@
 /* ============================================================
-   即時翻譯 PWA — Mobile-first dark theme
+   Voice Translator PWA — Mobile-first dark theme
    ============================================================ */
 
 :root {
@@ -346,7 +346,7 @@ body {
   white-space: pre-wrap;
 }
 .transcript-body:empty::before {
-  content: "（尚無內容）";
+  content: "(No content yet)";
   color: var(--fg-dim);
   font-style: italic;
 }

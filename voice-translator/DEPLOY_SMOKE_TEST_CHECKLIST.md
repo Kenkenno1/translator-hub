@@ -1,6 +1,6 @@
 # Voice Translator PWA Deploy + Smoke Test Checklist
 
-Use this checklist after the v1.1.7 hardening patch series. Keep the first paid smoke test short.
+Use this checklist after the v1.1.8 English UI patch. Keep the first paid smoke test short.
 
 ## 0. Preflight
 
@@ -10,8 +10,8 @@ Use this checklist after the v1.1.7 hardening patch series. Keep the first paid 
   - `sw.js`
   - `index.html`
   - `README.md`
-- [ ] Confirm `sw.js` has `CACHE_NAME = 'voice-translator-v9'`.
-- [ ] Confirm README version says `v1.1.7`.
+- [ ] Confirm `sw.js` has `CACHE_NAME = 'voice-translator-v10'`.
+- [ ] Confirm README version says `v1.1.8`.
 - [ ] Keep DevTools console available on desktop for first local checks.
 
 ## 1. Worker Deploy
@@ -41,7 +41,7 @@ Use this checklist after the v1.1.7 hardening patch series. Keep the first paid 
 - [ ] Open the deployed HTTPS URL in a normal browser tab.
 - [ ] Hard refresh once.
 - [ ] In DevTools Application tab, verify the active service worker is current.
-- [ ] Confirm cache storage contains `voice-translator-v9`, not only older `voice-translator-v*` caches.
+- [ ] Confirm cache storage contains `voice-translator-v10`, not only older `voice-translator-v*` caches.
 
 ## 4. First Phone Setup
 

@@ -1,5 +1,5 @@
 /**
- * 即時翻譯 PWA — Service Worker
+ * Voice Translator PWA — Service Worker
  *
  * Strategy:
  *   - Cache the app shell (HTML/CSS/JS/manifest/icons) on install.
@@ -24,7 +24,7 @@
 // CACHE_NAME (see activate handler), so old caches are pruned automatically
 // once the new SW takes over.
 // =============================================================================
-const CACHE_NAME = 'voice-translator-v9';
+const CACHE_NAME = 'voice-translator-v10';
 
 const SHELL_FILES = [
   './',

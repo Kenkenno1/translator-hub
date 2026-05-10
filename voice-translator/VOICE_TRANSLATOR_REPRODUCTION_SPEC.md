@@ -49,6 +49,7 @@
 ### 1.4 v1 必備功能
 
 - 手機優先 PWA UI。
+- 使用者可見 UI 文案使用英文；本再現規格文件維持繁體中文。
 - Cloudflare Worker mint ephemeral token。
 - Browser 透過 WebRTC 連 OpenAI `/v1/realtime/translations/calls`。
 - 支援 13 種目標語言。
@@ -175,7 +176,7 @@ https://voice-translator-token-minter.lucky0623.workers.dev
 
 ```js
 [部署值]
-const CACHE_NAME = 'voice-translator-v9';
+const CACHE_NAME = 'voice-translator-v10';
 ```
 
 ### 3.2 新專案必須替換的值
@@ -967,7 +968,7 @@ SHELL_FILES：
 目前值：
 
 ```js
-const CACHE_NAME = 'voice-translator-v9';
+const CACHE_NAME = 'voice-translator-v10';
 ```
 
 新專案可用：
@@ -1404,5 +1405,5 @@ const MAX_BODY_BYTES = 2048;
 
 ```js
 [部署值：每次 shell change 都要 bump]
-const CACHE_NAME = 'voice-translator-v9';
+const CACHE_NAME = 'voice-translator-v10';
 ```
