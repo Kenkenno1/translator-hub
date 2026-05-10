@@ -234,6 +234,8 @@ function populateSettingsControls() {
 function openDrawer() {
   dom.settingsDrawer.hidden = false;
   dom.drawerBackdrop.hidden = false;
+  dom.settingsDrawer.style.display = 'flex';
+  dom.drawerBackdrop.style.display = 'block';
   populateSettingsControls();
 }
 
@@ -251,6 +253,8 @@ function closeDrawer() {
   syncSettingsFromControls({ persist: true });
   dom.settingsDrawer.hidden = true;
   dom.drawerBackdrop.hidden = true;
+  dom.settingsDrawer.style.display = 'none';
+  dom.drawerBackdrop.style.display = 'none';
 }
 
 dom.settingsToggle.addEventListener('click', openDrawer);
