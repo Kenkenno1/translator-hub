@@ -182,6 +182,7 @@ voice_translator_pwa/
 
 ## 版本
 
+- **v1.1.2** — 2026-05-10 — 修復 `hidden` attribute 被 component CSS `display` 規則覆蓋的問題，加入全域 `[hidden] { display: none !important; }`，讓設定 drawer、backdrop、toast/banner 等 UI 能可靠收合；`CACHE_NAME` bump 至 `voice-translator-v4`。
 - **v1.1.1** — 2026-05-10 — 設定表單同步 hardening：測試 Worker 連線、喇叭測試、開始翻譯前都會先把 drawer 內的 Worker URL / PIN / mic mode / silence timeout 寫回 settings + localStorage，避免「測試成功但未關設定」時下一步仍讀舊設定；`CACHE_NAME` bump 至 `voice-translator-v3`。補準 Worker rate limit caveat：in-memory limiter 是 per-isolate best-effort，不是全域硬上限。
 - **v1.1.0** — 2026-05-10 — Patch series A-F：silence contract（RMS baseline + p90 校準 + 移除 dead VAD/transcript fallback）、warning timer leak fix、cost meter 10s 保留、graceful `session.close`（user_stop 2s window）、worker rate limit reorder + 2KB body cap、speaker test 改 mic+audio element 模擬真實 routing、iOS banner 加強、CACHE_NAME 治理。備份：`app(backup-2026-05-10-v1.0.0).js`
 - **v1.0.0** — 2026-05-10 — 初版（6 個 patch 之前的 baseline）
