@@ -281,17 +281,22 @@ function closeDrawer() {
 dom.settingsToggle.addEventListener('click', openDrawer);
 dom.settingsClose.addEventListener('click', closeDrawer);
 dom.drawerBackdrop.addEventListener('click', closeDrawer);
-dom.cfgPin.addEventListener('input', () => {
+function persistSettingsFromControls() {
   syncSettingsFromControls({ persist: true });
-});
+}
+
+dom.cfgPin.addEventListener('input', persistSettingsFromControls);
+dom.cfgPin.addEventListener('change', persistSettingsFromControls);
+dom.cfgPin.addEventListener('blur', persistSettingsFromControls);
 dom.cfgSilence.addEventListener('input', () => {
   dom.cfgSilenceOut.value = dom.cfgSilence.value;
-  syncSettingsFromControls({ persist: true });
+  persistSettingsFromControls();
 });
 document.querySelectorAll('input[name="mic-mode"]').forEach((input) => {
-  input.addEventListener('change', () => {
-    syncSettingsFromControls({ persist: true });
-  });
+  input.addEventListener('change', persistSettingsFromControls);
+});
+window.addEventListener('pagehide', () => {
+  if (!dom.settingsDrawer.hidden) persistSettingsFromControls();
 });
 
 // ===================== iOS standalone banner =====================

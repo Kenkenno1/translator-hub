@@ -182,6 +182,7 @@ voice_translator_pwa/
 
 ## 版本
 
+- **v1.1.6** — 2026-05-10 — PIN persistence 再加保守保存路徑：`input` / `change` / `blur` 都會保存，離開頁面時若設定 drawer 開著也會同步，降低手機瀏覽器事件差異造成 PIN 沒記住的風險；`CACHE_NAME` bump 至 `voice-translator-v8`。
 - **v1.1.5** — 2026-05-10 — 固定 Cloudflare Worker URL（公開部署資訊，不再要求使用者手填）；Worker PIN 仍只存在使用者裝置 localStorage，並在輸入時立即保存，做到每台裝置輸入一次後長期記住；`CACHE_NAME` bump 至 `voice-translator-v7`。
 - **v1.1.4** — 2026-05-10 — 修正 v1.1.3 在 service worker 新舊檔案混搭時可能讓設定按鈕打不開的問題：移除 HTML inline `display:none`，改由 `showDrawer()` / `hideDrawer()` 在初始化、開啟、關閉時統一控制 `hidden` + `style.display`；`CACHE_NAME` bump 至 `voice-translator-v6`。
 - **v1.1.3** — 2026-05-10 — 針對設定 drawer 收合再加 inline display fallback：HTML 初始 `style="display: none"`，`openDrawer()`/`closeDrawer()` 同步寫入 `style.display`，避免舊 CSS 或瀏覽器對 `[hidden]` 的處理差異造成側欄看似關不掉；`CACHE_NAME` bump 至 `voice-translator-v5`。
