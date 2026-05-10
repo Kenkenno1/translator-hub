@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
+    />
+    <meta name="theme-color" content="#0a0a0a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="即時翻譯" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+    <link rel="apple-touch-icon" href="./icon-192.png" />
+    <link rel="stylesheet" href="./styles.css" />
+    <title>即時翻譯 — 中文語音翻譯</title>
+  </head>
+  <body>
+    <!-- iOS PWA standalone-mode warning banner -->
+    <div id="ios-standalone-banner" class="banner banner-warn" hidden>
+      <span>
+        偵測到 iOS 主畫面安裝模式。
+        <strong>請先按「🔊 喇叭測試」確認聲音從大喇叭出來</strong>，
+        再開始計費翻譯 session。若聲音小或從聽筒出來，請改用 Safari 分頁開啟此網址。
+      </span>
+      <button class="banner-close" aria-label="關閉提示">×</button>
+    </div>
+
+    <header class="topbar">
+      <div class="title">即時翻譯</div>
+      <button id="settings-toggle" class="icon-btn" aria-label="設定">⚙</button>
+    </header>
+
+    <main class="main">
+      <!-- Connection state pill -->
+      <div id="state-pill" class="state-pill state-idle" aria-live="polite">待機中</div>
+
+      <!-- Cost meter -->
+      <div id="cost-meter" class="cost-meter" aria-live="polite" hidden>
+        <span class="cost-label">本次費用</span>
+        <span id="cost-value" class="cost-value">$0.0000</span>
+        <span id="cost-duration" class="cost-duration">0:00</span>
+      </div>
+
+      <!-- Mic button with silence countdown ring -->
+      <div class="mic-wrap">
+        <svg class="silence-ring" viewBox="0 0 200 200" aria-hidden="true">
+          <circle class="ring-bg" cx="100" cy="100" r="92" />
+          <circle id="silence-ring-fg" class="ring-fg" cx="100" cy="100" r="92" />
+        </svg>
+        <button id="mic-btn" class="mic-btn" aria-label="開始翻譯">
+          <svg class="mic-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"
+              fill="currentColor"
+            />
+          </svg>
+        </button>
+      </div>
+      <div id="mic-hint" class="mic-hint">輕觸開始，再輕觸結束</div>
+
+      <!-- Language selection + speaker test -->
+      <div class="controls">
+        <label class="control-row">
+          <span class="control-label">翻譯目標語言</span>
+          <select id="target-lang" class="control-select">
+            <option value="en" selected>English（英文）</option>
+            <option value="ja">日本語（日文）</option>
+            <option value="ko">한국어（韓文）</option>
+            <option value="es">Español（西班牙文）</option>
+            <option value="fr">Français（法文）</option>
+            <option value="de">Deutsch（德文）</option>
+            <option value="pt">Português（葡萄牙文）</option>
+            <option value="it">Italiano（義大利文）</option>
+            <option value="ru">Русский（俄文）</option>
+            <option value="hi">हिन्दी（印地文）</option>
+            <option value="id">Indonesia（印尼文）</option>
+            <option value="vi">Tiếng Việt（越南文）</option>
+            <option value="zh">中文</option>
+          </select>
+        </label>
+        <button id="speaker-test-btn" class="secondary-btn">🔊 喇叭測試</button>
+      </div>
+
+      <!-- Transcripts -->
+      <section class="transcripts">
+        <div class="transcript">
+          <div class="transcript-header">
+            <span class="transcript-label">原文（中文）</span>
+            <button class="clear-btn" data-target="src-text" aria-label="清除原文">清除</button>
+          </div>
+          <div id="src-text" class="transcript-body" lang="zh-Hant"></div>
+        </div>
+        <div class="transcript">
+          <div class="transcript-header">
+            <span class="transcript-label">譯文 <span id="target-lang-label">English</span></span>
+            <button class="clear-btn" data-target="dst-text" aria-label="清除譯文">清除</button>
+          </div>
+          <div id="dst-text" class="transcript-body"></div>
+        </div>
+      </section>
+
+      <!-- Hidden audio element receives the translated stream -->
+      <audio id="translated-audio" autoplay playsinline></audio>
+    </main>
+
+    <!-- Settings drawer -->
+    <aside id="settings-drawer" class="drawer" hidden>
+      <div class="drawer-header">
+        <h2>設定</h2>
+        <button id="settings-close" class="icon-btn" aria-label="關閉設定">×</button>
+      </div>
+      <div class="drawer-body">
+        <label class="field">
+          <span>Cloudflare Worker URL</span>
+          <input
+            id="cfg-worker-url"
+            type="url"
+            placeholder="https://your-worker.workers.dev"
+            autocomplete="off"
+            inputmode="url"
+          />
+        </label>
+        <label class="field">
+          <span>Worker PIN</span>
+          <input
+            id="cfg-pin"
+            type="password"
+            placeholder="部署 Worker 時設定的 APP_PIN"
+            autocomplete="off"
+          />
+        </label>
+        <label class="field">
+          <span>無聲自動斷線秒數：<output id="cfg-silence-out">30</output> 秒</span>
+          <input id="cfg-silence" type="range" min="10" max="120" step="5" value="30" />
+        </label>
+        <fieldset class="field">
+          <legend>麥克風模式</legend>
+          <label class="radio">
+            <input type="radio" name="mic-mode" value="whisper" checked />
+            <span>Whisper 模式（小聲講、AGC 開、回音消除開）</span>
+          </label>
+          <label class="radio">
+            <input type="radio" name="mic-mode" value="studio" />
+            <span>Studio 模式（乾淨環境、AGC 關、不處理）</span>
+          </label>
+        </fieldset>
+        <button id="test-connection" class="secondary-btn">測試 Worker 連線</button>
+        <div id="test-connection-result" class="test-result" hidden></div>
+        <hr />
+        <details class="about">
+          <summary>關於本 APP</summary>
+          <p>使用 OpenAI <code>gpt-realtime-translate</code>（2026-05 發布）即時翻譯。</p>
+          <p>計費以實際語音時長計算（翻譯 $0.034/min + 轉錄 $0.017/min）。</p>
+          <p>30 秒無聲自動斷線，避免連線忘關產生不必要費用。</p>
+        </details>
+      </div>
+    </aside>
+    <div id="drawer-backdrop" class="drawer-backdrop" hidden></div>
+
+    <!-- Toast container -->
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+    <script src="./app.js" type="module"></script>
+  </body>
+</html>
