@@ -182,6 +182,7 @@ voice_translator_pwa/
 
 ## 版本
 
+- **v1.1.4** — 2026-05-10 — 修正 v1.1.3 在 service worker 新舊檔案混搭時可能讓設定按鈕打不開的問題：移除 HTML inline `display:none`，改由 `showDrawer()` / `hideDrawer()` 在初始化、開啟、關閉時統一控制 `hidden` + `style.display`；`CACHE_NAME` bump 至 `voice-translator-v6`。
 - **v1.1.3** — 2026-05-10 — 針對設定 drawer 收合再加 inline display fallback：HTML 初始 `style="display: none"`，`openDrawer()`/`closeDrawer()` 同步寫入 `style.display`，避免舊 CSS 或瀏覽器對 `[hidden]` 的處理差異造成側欄看似關不掉；`CACHE_NAME` bump 至 `voice-translator-v5`。
 - **v1.1.2** — 2026-05-10 — 修復 `hidden` attribute 被 component CSS `display` 規則覆蓋的問題，加入全域 `[hidden] { display: none !important; }`，讓設定 drawer、backdrop、toast/banner 等 UI 能可靠收合；`CACHE_NAME` bump 至 `voice-translator-v4`。
 - **v1.1.1** — 2026-05-10 — 設定表單同步 hardening：測試 Worker 連線、喇叭測試、開始翻譯前都會先把 drawer 內的 Worker URL / PIN / mic mode / silence timeout 寫回 settings + localStorage，避免「測試成功但未關設定」時下一步仍讀舊設定；`CACHE_NAME` bump 至 `voice-translator-v3`。補準 Worker rate limit caveat：in-memory limiter 是 per-isolate best-effort，不是全域硬上限。

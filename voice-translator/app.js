@@ -231,11 +231,22 @@ function populateSettingsControls() {
   ).checked = true;
 }
 
-function openDrawer() {
+function showDrawer() {
   dom.settingsDrawer.hidden = false;
   dom.drawerBackdrop.hidden = false;
   dom.settingsDrawer.style.display = 'flex';
   dom.drawerBackdrop.style.display = 'block';
+}
+
+function hideDrawer() {
+  dom.settingsDrawer.hidden = true;
+  dom.drawerBackdrop.hidden = true;
+  dom.settingsDrawer.style.display = 'none';
+  dom.drawerBackdrop.style.display = 'none';
+}
+
+function openDrawer() {
+  showDrawer();
   populateSettingsControls();
 }
 
@@ -251,10 +262,7 @@ function syncSettingsFromControls({ persist = false } = {}) {
 
 function closeDrawer() {
   syncSettingsFromControls({ persist: true });
-  dom.settingsDrawer.hidden = true;
-  dom.drawerBackdrop.hidden = true;
-  dom.settingsDrawer.style.display = 'none';
-  dom.drawerBackdrop.style.display = 'none';
+  hideDrawer();
 }
 
 dom.settingsToggle.addEventListener('click', openDrawer);
@@ -1069,6 +1077,7 @@ if ('serviceWorker' in navigator) {
 setState('idle');
 resetSilenceRing();
 populateSettingsControls();
+hideDrawer();
 maybeShowIosBanner();
 dom.targetLangLabel.textContent =
   LANG_LABELS[dom.targetLang.value] || dom.targetLang.value;
