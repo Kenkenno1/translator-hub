@@ -420,6 +420,11 @@ body {
   font-size: 15px;
   font-family: inherit;
 }
+.field input[readonly] {
+  color: var(--fg-dim);
+  border-color: var(--border);
+  cursor: default;
+}
 .field input[type="range"] {
   width: 100%;
   accent-color: var(--accent);

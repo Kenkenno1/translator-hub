@@ -13,6 +13,8 @@
 
 const OPENAI_REALTIME_TRANSLATE_URL =
   'https://api.openai.com/v1/realtime/translations/calls';
+const DEFAULT_WORKER_URL =
+  'https://voice-translator-token-minter.lucky0623.workers.dev';
 
 const PRICE_TRANSLATE_PER_MIN = 0.034; // gpt-realtime-translate
 const PRICE_WHISPER_PER_MIN = 0.017; // gpt-realtime-whisper transcription
@@ -101,20 +103,30 @@ const dom = {
 
 const SETTINGS_KEY = 'vt_settings_v1';
 const defaultSettings = {
-  workerUrl: '',
+  workerUrl: DEFAULT_WORKER_URL,
   pin: '',
   silenceTimeoutSec: 30,
   micMode: 'whisper', // or 'studio'
   iosBannerDismissed: false,
 };
 
+function normalizeSettings(s = {}) {
+  return {
+    ...defaultSettings,
+    ...s,
+    // Worker URL is public deployment config. Keep it fixed so users only
+    // have to enter the private PIN once on each device.
+    workerUrl: DEFAULT_WORKER_URL,
+  };
+}
+
 function loadSettings() {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
-    if (!raw) return { ...defaultSettings };
-    return { ...defaultSettings, ...JSON.parse(raw) };
+    if (!raw) return normalizeSettings();
+    return normalizeSettings(JSON.parse(raw));
   } catch {
-    return { ...defaultSettings };
+    return normalizeSettings();
   }
 }
 
@@ -222,7 +234,7 @@ function clearTranscripts() {
 // ===================== Settings drawer =====================
 
 function populateSettingsControls() {
-  dom.cfgWorkerUrl.value = settings.workerUrl;
+  dom.cfgWorkerUrl.value = DEFAULT_WORKER_URL;
   dom.cfgPin.value = settings.pin;
   dom.cfgSilence.value = settings.silenceTimeoutSec;
   dom.cfgSilenceOut.value = settings.silenceTimeoutSec;
@@ -251,7 +263,8 @@ function openDrawer() {
 }
 
 function syncSettingsFromControls({ persist = false } = {}) {
-  settings.workerUrl = dom.cfgWorkerUrl.value.trim();
+  settings.workerUrl = DEFAULT_WORKER_URL;
+  dom.cfgWorkerUrl.value = DEFAULT_WORKER_URL;
   settings.pin = dom.cfgPin.value;
   settings.silenceTimeoutSec = parseInt(dom.cfgSilence.value, 10) || 30;
   const checked = document.querySelector('input[name="mic-mode"]:checked');
@@ -268,8 +281,17 @@ function closeDrawer() {
 dom.settingsToggle.addEventListener('click', openDrawer);
 dom.settingsClose.addEventListener('click', closeDrawer);
 dom.drawerBackdrop.addEventListener('click', closeDrawer);
+dom.cfgPin.addEventListener('input', () => {
+  syncSettingsFromControls({ persist: true });
+});
 dom.cfgSilence.addEventListener('input', () => {
   dom.cfgSilenceOut.value = dom.cfgSilence.value;
+  syncSettingsFromControls({ persist: true });
+});
+document.querySelectorAll('input[name="mic-mode"]').forEach((input) => {
+  input.addEventListener('change', () => {
+    syncSettingsFromControls({ persist: true });
+  });
 });
 
 // ===================== iOS standalone banner =====================
