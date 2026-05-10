@@ -38,7 +38,7 @@ wrangler secret put APP_PIN          # 自訂一組長亂碼 (16+ 字元)
 wrangler deploy
 ```
 
-部署完會給你一個 `https://voice-translator-token-minter.<your-subdomain>.workers.dev` URL，記下來。
+部署完會給你一個 `https://voice-translator-token-minter.<your-subdomain>.workers.dev` URL。此專案目前已在前端固定使用既有 Worker URL；若你重做自己的部署，請同步更新 `app.js` / `index.html` 的 Worker URL。
 
 ### 2. 部署 PWA 到 GitHub Pages
 
@@ -53,9 +53,9 @@ Pages 啟用後就會有 HTTPS 網址。
 ### 3. 第一次使用
 
 1. 手機瀏覽器開 PWA URL（HTTPS 必需，否則麥克風用不了）
-2. 自動跳出設定，填：
-   - **Worker URL**：步驟 1 拿到的 `https://...workers.dev`
-   - **PIN**：步驟 1 設定的 APP_PIN
+2. 自動跳出設定：
+   - **Worker URL**：已固定、唯讀，不需要手填
+   - **PIN**：填入步驟 1 設定的 APP_PIN
    - 無聲自動斷線秒數：預設 30 秒
    - 麥克風模式：Whisper（小聲講）/ Studio（乾淨環境）
 3. 點「測試 Worker 連線」確認 token mint 正常
@@ -182,6 +182,7 @@ voice_translator_pwa/
 
 ## 版本
 
+- **v1.1.7** — 2026-05-10 — Worker upstream JSON parse hardening（OpenAI 200/非 JSON 時回 `502 upstream_invalid_json`）、`startSession` cancellation token（避免 connecting 期間取消後舊 async flow 又啟動付費 WebRTC session）、remote audio `play()` 失敗 toast、live/connecting/closing 鎖住目標語言、Service Worker 只清 `voice-translator-*` cache 避免刪同 origin 其他 app cache；`CACHE_NAME` bump 至 `voice-translator-v9`。
 - **v1.1.6** — 2026-05-10 — PIN persistence 再加保守保存路徑：`input` / `change` / `blur` 都會保存，離開頁面時若設定 drawer 開著也會同步，降低手機瀏覽器事件差異造成 PIN 沒記住的風險；`CACHE_NAME` bump 至 `voice-translator-v8`。
 - **v1.1.5** — 2026-05-10 — 固定 Cloudflare Worker URL（公開部署資訊，不再要求使用者手填）；Worker PIN 仍只存在使用者裝置 localStorage，並在輸入時立即保存，做到每台裝置輸入一次後長期記住；`CACHE_NAME` bump 至 `voice-translator-v7`。
 - **v1.1.4** — 2026-05-10 — 修正 v1.1.3 在 service worker 新舊檔案混搭時可能讓設定按鈕打不開的問題：移除 HTML inline `display:none`，改由 `showDrawer()` / `hideDrawer()` 在初始化、開啟、關閉時統一控制 `hidden` + `style.display`；`CACHE_NAME` bump 至 `voice-translator-v6`。

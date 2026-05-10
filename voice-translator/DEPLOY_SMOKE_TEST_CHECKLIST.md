@@ -1,6 +1,6 @@
 # Voice Translator PWA Deploy + Smoke Test Checklist
 
-Use this checklist after the v1.1.0 hardening patch series. Keep the first paid smoke test short.
+Use this checklist after the v1.1.7 hardening patch series. Keep the first paid smoke test short.
 
 ## 0. Preflight
 
@@ -10,8 +10,8 @@ Use this checklist after the v1.1.0 hardening patch series. Keep the first paid 
   - `sw.js`
   - `index.html`
   - `README.md`
-- [ ] Confirm `sw.js` has `CACHE_NAME = 'voice-translator-v2'`.
-- [ ] Confirm README version says `v1.1.0`.
+- [ ] Confirm `sw.js` has `CACHE_NAME = 'voice-translator-v9'`.
+- [ ] Confirm README version says `v1.1.7`.
 - [ ] Keep DevTools console available on desktop for first local checks.
 
 ## 1. Worker Deploy
@@ -41,12 +41,13 @@ Use this checklist after the v1.1.0 hardening patch series. Keep the first paid 
 - [ ] Open the deployed HTTPS URL in a normal browser tab.
 - [ ] Hard refresh once.
 - [ ] In DevTools Application tab, verify the active service worker is current.
-- [ ] Confirm cache storage contains `voice-translator-v2`, not only `voice-translator-v1`.
+- [ ] Confirm cache storage contains `voice-translator-v9`, not only older `voice-translator-v*` caches.
 
 ## 4. First Phone Setup
 
 - [ ] Open the deployed HTTPS URL on the phone.
-- [ ] Enter Worker URL and APP_PIN in Settings.
+- [ ] Confirm Worker URL is fixed/read-only in Settings.
+- [ ] Enter APP_PIN in Settings.
 - [ ] Tap `測試 Worker 連線`; expect success.
 - [ ] Set silence timeout to `30 秒`.
 - [ ] Keep output language as English for the first test.
@@ -93,7 +94,7 @@ Use this checklist after the v1.1.0 hardening patch series. Keep the first paid 
 
 - [ ] Test Japanese with one short sentence.
 - [ ] Test Korean with one short sentence.
-- [ ] Confirm changing language while live prompts the user to stop/restart.
+- [ ] Confirm the language selector is disabled while live/connecting/closing.
 
 ## 10. iOS PWA Specific
 

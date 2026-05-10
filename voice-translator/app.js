@@ -5,7 +5,7 @@
  *   1. Tap mic → fetch ephemeral from Cloudflare Worker
  *   2. Open WebRTC PeerConnection to OpenAI /v1/realtime/translations/calls
  *   3. Stream mic → server, play translated audio track to <audio>
- *   4. Listen on data channel for transcript + VAD events
+ *   4. Listen on data channel for transcripts; use client-side RMS for silence
  *   5. Auto-disconnect after configurable silence (default 30s)
  */
 
@@ -144,6 +144,11 @@ let settings = loadSettings();
 // from racing with an in-flight speaker test (both write dom.audio.srcObject).
 let speakerTestRunning = false;
 
+// Monotonic cancellation token for startSession(). A tap during "connecting"
+// calls stopSession(), which increments this and makes the in-flight async start
+// bail out before it can open an OpenAI WebRTC session after the user cancelled.
+let startAttemptSeq = 0;
+
 // ===================== Session state =====================
 
 const session = {
@@ -200,6 +205,8 @@ function setState(next) {
     'aria-label',
     next === 'live' ? '結束翻譯' : '開始翻譯',
   );
+  dom.targetLang.disabled =
+    next === 'connecting' || next === 'live' || next === 'closing';
   dom.micHint.textContent = {
     idle: '輕觸開始，再輕觸結束',
     connecting: '連線中…',
@@ -527,7 +534,46 @@ dom.micBtn.addEventListener('click', async () => {
 
 // ===================== Session lifecycle =====================
 
+function cleanupStartAttemptResources({ micStream, pc, dc }) {
+  const ownsSessionResource =
+    (micStream && session.micStream === micStream) ||
+    (pc && session.pc === pc) ||
+    (dc && session.dc === dc);
+
+  if (ownsSessionResource) {
+    cleanup();
+    return;
+  }
+
+  // These resources were created by a stale start attempt but never became the
+  // current session globals, so clean them locally without touching a newer
+  // attempt that may already be using session.*.
+  if (micStream) {
+    micStream.getTracks().forEach((t) => t.stop());
+  }
+  if (dc && dc.readyState !== 'closed') {
+    try {
+      dc.close();
+    } catch {}
+  }
+  if (pc && pc.signalingState !== 'closed') {
+    try {
+      pc.close();
+    } catch {}
+  }
+}
+
 async function startSession() {
+  const startAttempt = ++startAttemptSeq;
+  let micStream = null;
+  let pc = null;
+  let dc = null;
+  const abortIfCancelled = () => {
+    if (startAttempt === startAttemptSeq) return false;
+    cleanupStartAttemptResources({ micStream, pc, dc });
+    return true;
+  };
+
   syncSettingsFromControls({ persist: true });
 
   // Reject if speaker test is in flight — both write dom.audio.srcObject and
@@ -553,12 +599,14 @@ async function startSession() {
   try {
     // 1. Mic — see buildMicConstraints() for Whisper/Studio details.
     // sampleRate: 24000 matches the Realtime API's expected PCM16 24 kHz rate.
-    session.micStream = await navigator.mediaDevices.getUserMedia({
+    micStream = await navigator.mediaDevices.getUserMedia({
       audio: buildMicConstraints(),
     });
+    if (abortIfCancelled()) return;
+    session.micStream = micStream;
 
     // Log what the browser actually applied (constraints are advisory)
-    const actual = session.micStream.getAudioTracks()[0].getSettings();
+    const actual = micStream.getAudioTracks()[0].getSettings();
     console.log('[mic] applied constraints:', actual);
 
     // 2. Ephemeral token
@@ -570,6 +618,7 @@ async function startSession() {
         pin: settings.pin,
       }),
     });
+    if (abortIfCancelled()) return;
     if (!tokenResp.ok) {
       const errBody = await tokenResp.json().catch(() => ({}));
       throw new Error(
@@ -577,23 +626,33 @@ async function startSession() {
       );
     }
     const { ephemeral } = await tokenResp.json();
+    if (abortIfCancelled()) return;
     if (!ephemeral) throw new Error('Worker 回應缺少 ephemeral');
 
     // 3. RTCPeerConnection
-    const pc = new RTCPeerConnection();
+    pc = new RTCPeerConnection();
     session.pc = pc;
 
     pc.ontrack = (ev) => {
+      if (session.pc !== pc) return;
       console.log('[pc] track received', ev.track.kind);
       // Stream the translated audio to the <audio> element.
       if (dom.audio.srcObject !== ev.streams[0]) {
         dom.audio.srcObject = ev.streams[0];
         dom.audio.volume = 1.0;
-        dom.audio.play().catch((e) => console.warn('autoplay failed:', e));
+        dom.audio.play().catch((e) => {
+          console.warn('autoplay failed:', e);
+          toast(
+            '音訊播放被瀏覽器擋下，請點擊頁面任意處啟動。翻譯仍在進行（仍計費）。',
+            'error',
+            8000,
+          );
+        });
       }
     };
 
     pc.onconnectionstatechange = () => {
+      if (session.pc !== pc) return;
       console.log('[pc] state:', pc.connectionState);
       if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
         if (session.state === 'live' || session.state === 'connecting') {
@@ -610,17 +669,24 @@ async function startSession() {
       .forEach((t) => pc.addTrack(t, session.micStream));
 
     // Data channel
-    const dc = pc.createDataChannel('oai-events');
+    dc = pc.createDataChannel('oai-events');
     session.dc = dc;
-    dc.addEventListener('open', () => console.log('[dc] open'));
-    dc.addEventListener('message', handleServerEvent);
+    dc.addEventListener('open', () => {
+      if (session.dc === dc) console.log('[dc] open');
+    });
+    dc.addEventListener('message', (ev) => {
+      if (session.dc !== dc) return;
+      handleServerEvent(ev);
+    });
 
     // Set up RMS analyser in parallel (mandatory fallback)
-    setupRmsAnalyser(session.micStream);
+    setupRmsAnalyser(micStream);
 
     // 4. SDP exchange
     const offer = await pc.createOffer();
+    if (abortIfCancelled()) return;
     await pc.setLocalDescription(offer);
+    if (abortIfCancelled()) return;
 
     const sdpResp = await fetch(OPENAI_REALTIME_TRANSLATE_URL, {
       method: 'POST',
@@ -630,12 +696,15 @@ async function startSession() {
       },
       body: offer.sdp,
     });
+    if (abortIfCancelled()) return;
     if (!sdpResp.ok) {
       const text = await sdpResp.text();
       throw new Error(`SDP 交換失敗：HTTP ${sdpResp.status} — ${text.slice(0, 200)}`);
     }
     const answerSdp = await sdpResp.text();
+    if (abortIfCancelled()) return;
     await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp });
+    if (abortIfCancelled()) return;
 
     // 5. Live!
     setState('live');
@@ -645,6 +714,10 @@ async function startSession() {
     startSilenceTimer();
     requestWakeLock();
   } catch (err) {
+    if (startAttempt !== startAttemptSeq) {
+      cleanupStartAttemptResources({ micStream, pc, dc });
+      return;
+    }
     console.error('[startSession] failed', err);
     toast('啟動失敗：' + err.message, 'error', 6000);
     setState('error');
@@ -654,6 +727,7 @@ async function startSession() {
 
 async function stopSession(reason) {
   console.log('[stopSession]', reason);
+  startAttemptSeq++;
 
   // user_stop only: try graceful close so the server flushes pending audio /
   // emits the final transcript chunk. silence/error skip this — when the

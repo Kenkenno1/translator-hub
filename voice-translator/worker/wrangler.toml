@@ -1,0 +1,18 @@
+name = "voice-translator-token-minter"
+main = "worker.js"
+compatibility_date = "2026-05-01"
+
+# Secrets are NOT set here — use:
+#   wrangler secret put OPENAI_API_KEY
+#   wrangler secret put APP_PIN
+#
+# The PIN is shared with the PWA Settings drawer. Pick something
+# unguessable (16+ random chars). It's the only thing standing between
+# anyone-with-the-Worker-URL and your OpenAI bill.
+
+# For local dev:
+#   1. cp .dev.vars.example .dev.vars
+#   2. fill in real values
+#   3. wrangler dev
+[dev]
+port = 8787
