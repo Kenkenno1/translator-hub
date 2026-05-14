@@ -1,5 +1,6 @@
 /* ============================================================
    Voice Translator PWA — Mobile-first dark theme
+   (UI refresh: 2026-05-15 — token-based design system)
    ============================================================ */
 
 :root {
@@ -8,7 +9,7 @@
   --bg-elev-2: #222;
   --fg: #f5f5f5;
   --fg-dim: #a0a0a0;
-  --accent: #4ade80;
+  --accent: #34D399;
   --accent-dim: #166534;
   --warn: #fbbf24;
   --error: #f87171;
@@ -17,6 +18,14 @@
   --gap: 14px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* UI refresh tokens (2026-05-15) */
+  --src-color: #A7B0C0;          /* Source transcript text */
+  --dst-color: #7DD3FC;          /* Translated transcript text */
+  --font-transcript: 24px;       /* src/dst transcript body */
+  --font-hint: 13px;             /* mic hint */
+  --font-pill: 13px;             /* state pill */
+  --transcripts-height: 58dvh;   /* total transcripts area */
 }
 
 * {
@@ -121,7 +130,7 @@ body {
 
 /* Connection state pill */
 .state-pill {
-  font-size: 13px;
+  font-size: var(--font-pill);
   padding: 4px 12px;
   border-radius: 999px;
   background: var(--bg-elev);
@@ -163,7 +172,7 @@ body {
 .cost-value {
   color: var(--fg);
   font-weight: 600;
-  font-size: 14px;
+  font-size: 15px;
 }
 .cost-duration {
   color: var(--fg-dim);
@@ -196,7 +205,7 @@ body {
   fill: none;
   stroke: var(--warn);
   stroke-width: 4;
-  stroke-dasharray: 578; /* 2 * pi * 92 ≈ 578 */
+  stroke-dasharray: 578; /* 2 * pi * 92 ≈ 578 (locked by app.js RING_CIRCUMFERENCE) */
   stroke-dashoffset: 578;
   transition: stroke-dashoffset 1s linear, stroke 0.3s;
 }
@@ -213,15 +222,17 @@ body {
   width: 160px;
   height: 160px;
   border-radius: 50%;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   background: var(--bg-elev);
   color: var(--fg-dim);
   cursor: pointer;
-  transition: background 0.2s, color 0.2s, transform 0.1s;
+  transition: background 0.2s, color 0.2s, transform 0.1s, box-shadow 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 .mic-btn:active {
   transform: scale(0.96);
@@ -233,14 +244,30 @@ body {
 .mic-btn.live {
   background: var(--accent);
   color: #001a08;
+  border-color: rgba(255, 255, 255, 0.12);
+  animation: pulse-live 2s ease-in-out infinite;
 }
 .mic-btn.connecting {
   background: var(--warn);
   color: #1a1200;
 }
+@keyframes pulse-live {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow:
+      0 6px 20px rgba(52, 211, 153, 0.24),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow:
+      0 8px 24px rgba(52, 211, 153, 0.42),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+}
 
 .mic-hint {
-  font-size: 13px;
+  font-size: var(--font-hint);
   color: var(--fg-dim);
 }
 
@@ -249,8 +276,14 @@ body {
   width: 100%;
   max-width: 480px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
+}
+.controls .control-row {
+  flex: 1 1 220px;
+  min-width: 200px;
 }
 .control-row {
   display: flex;
@@ -270,7 +303,7 @@ body {
   background: transparent;
   color: var(--fg);
   border: none;
-  font-size: 15px;
+  font-size: 16px;
   font-family: inherit;
   flex: 1;
   min-width: 0;
@@ -300,6 +333,22 @@ body {
   background: var(--bg-elev-2);
 }
 
+/* Speaker test — ghost button override (small, restrained) */
+#speaker-test-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--fg-dim);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 13px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+#speaker-test-btn:active {
+  background: var(--bg-elev);
+  color: var(--fg);
+}
+
 /* ---------- Transcripts ---------- */
 .transcripts {
   width: 100%;
@@ -308,6 +357,8 @@ body {
   flex-direction: column;
   gap: 10px;
   margin-top: 4px;
+  height: var(--transcripts-height);
+  flex: 0 0 auto;
 }
 .transcript {
   background: var(--bg-elev);
@@ -315,16 +366,24 @@ body {
   border-radius: var(--radius);
   display: flex;
   flex-direction: column;
+  min-height: 0; /* allow inner flex children to shrink + scroll */
+}
+.transcripts > .transcript:nth-of-type(1) {
+  flex: 45 1 0; /* source — 45% */
+}
+.transcripts > .transcript:nth-of-type(2) {
+  flex: 55 1 0; /* target — 55% (slightly more, primary attention) */
 }
 .transcript-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
+  padding: 7px 12px;
   border-bottom: 1px solid var(--border);
+  flex: 0 0 auto;
 }
 .transcript-label {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--fg-dim);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -342,11 +401,11 @@ body {
 }
 .transcript-body {
   padding: 12px;
-  min-height: 60px;
-  max-height: 200px;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
-  font-size: 16px;
-  line-height: 1.6;
+  font-size: var(--font-transcript);
+  line-height: 1.5;
   word-break: break-word;
   white-space: pre-wrap;
 }
@@ -354,6 +413,14 @@ body {
   content: "(No content yet)";
   color: var(--fg-dim);
   font-style: italic;
+  font-size: 16px;
+}
+
+#src-text {
+  color: var(--src-color);
+}
+#dst-text {
+  color: var(--dst-color);
 }
 
 #translated-audio {
@@ -422,7 +489,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 10px 12px;
-  font-size: 15px;
+  font-size: 16px; /* >=16px prevents iOS Safari auto-zoom on focus */
   font-family: inherit;
 }
 .field input[readonly] {
@@ -551,11 +618,43 @@ hr {
   }
   .transcripts {
     flex-direction: row;
+    height: var(--transcripts-height);
   }
-  .transcript {
-    flex: 1;
+  .transcripts > .transcript:nth-of-type(1),
+  .transcripts > .transcript:nth-of-type(2) {
+    flex: 1 1 0;
   }
-  .transcript-body {
-    max-height: 280px;
+}
+
+/* ---------- Compact (short viewport, e.g. iPhone SE 4.7") ---------- */
+@media (max-height: 700px) {
+  :root {
+    --font-transcript: 21px;
+    --transcripts-height: 50dvh;
+  }
+  .main {
+    gap: 10px;
+    padding: 12px;
+  }
+  .mic-wrap {
+    width: 160px;
+    height: 160px;
+    margin-top: 4px;
+  }
+  .mic-btn {
+    width: 130px;
+    height: 130px;
+  }
+  .mic-btn .mic-icon {
+    width: 52px;
+    height: 52px;
+  }
+}
+
+/* ---------- Reduced motion (a11y) ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .mic-btn.live,
+  .mic-wrap.warning .ring-fg {
+    animation: none;
   }
 }
