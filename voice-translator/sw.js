@@ -24,7 +24,7 @@
 // CACHE_NAME (see activate handler), so old caches are pruned automatically
 // once the new SW takes over.
 // =============================================================================
-const CACHE_NAME = 'voice-translator-v13';
+const CACHE_NAME = 'voice-translator-v14';
 
 const SHELL_FILES = [
   './',
