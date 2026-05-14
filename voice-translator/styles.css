@@ -425,6 +425,28 @@ body {
   border-color: var(--border);
   cursor: default;
 }
+.pin-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+}
+.pin-row input {
+  min-width: 0;
+}
+.pin-action {
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0 10px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.pin-action:active {
+  background: var(--bg-elev-2);
+}
 .field input[type="range"] {
   width: 100%;
   accent-color: var(--accent);

@@ -89,6 +89,8 @@ const dom = {
   drawerBackdrop: $('drawer-backdrop'),
   cfgWorkerUrl: $('cfg-worker-url'),
   cfgPin: $('cfg-pin'),
+  pinPasteBtn: $('pin-paste'),
+  pinToggleBtn: $('pin-toggle'),
   cfgSilence: $('cfg-silence'),
   cfgSilenceOut: $('cfg-silence-out'),
   testConnectionBtn: $('test-connection'),
@@ -267,6 +269,12 @@ function hideDrawer() {
 function openDrawer() {
   showDrawer();
   populateSettingsControls();
+  if (!settings.pin) {
+    setTimeout(() => {
+      dom.cfgPin.focus({ preventScroll: true });
+      dom.cfgPin.select();
+    }, 50);
+  }
 }
 
 function syncSettingsFromControls({ persist = false } = {}) {
@@ -292,9 +300,46 @@ function persistSettingsFromControls() {
   syncSettingsFromControls({ persist: true });
 }
 
+async function pastePinFromClipboard() {
+  if (!navigator.clipboard?.readText) {
+    toast('Clipboard paste is unavailable. Paste into the PIN field directly.', 'warn');
+    dom.cfgPin.focus();
+    return;
+  }
+
+  try {
+    const pin = (await navigator.clipboard.readText()).trim();
+    if (!pin) {
+      toast('Clipboard is empty.', 'warn');
+      dom.cfgPin.focus();
+      return;
+    }
+
+    dom.cfgPin.value = pin;
+    persistSettingsFromControls();
+    dom.cfgPin.type = 'password';
+    dom.pinToggleBtn.textContent = 'Show';
+    dom.pinToggleBtn.setAttribute('aria-pressed', 'false');
+    toast('PIN saved on this device.');
+  } catch (e) {
+    toast('Clipboard permission was blocked. Paste into the PIN field directly.', 'warn');
+    dom.cfgPin.focus();
+  }
+}
+
+function togglePinVisibility() {
+  const shouldShow = dom.cfgPin.type === 'password';
+  dom.cfgPin.type = shouldShow ? 'text' : 'password';
+  dom.pinToggleBtn.textContent = shouldShow ? 'Hide' : 'Show';
+  dom.pinToggleBtn.setAttribute('aria-pressed', shouldShow ? 'true' : 'false');
+  dom.cfgPin.focus();
+}
+
 dom.cfgPin.addEventListener('input', persistSettingsFromControls);
 dom.cfgPin.addEventListener('change', persistSettingsFromControls);
 dom.cfgPin.addEventListener('blur', persistSettingsFromControls);
+dom.pinPasteBtn.addEventListener('click', pastePinFromClipboard);
+dom.pinToggleBtn.addEventListener('click', togglePinVisibility);
 dom.cfgSilence.addEventListener('input', () => {
   dom.cfgSilenceOut.value = dom.cfgSilence.value;
   persistSettingsFromControls();
@@ -481,6 +526,12 @@ dom.testConnectionBtn.addEventListener('click', async () => {
   if (!url) {
     result.className = 'test-result fail';
     result.textContent = 'Worker URL is missing.';
+    return;
+  }
+  if (!pin) {
+    result.className = 'test-result fail';
+    result.textContent = 'Worker PIN is missing.';
+    dom.cfgPin.focus();
     return;
   }
 
