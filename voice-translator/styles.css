@@ -273,12 +273,17 @@ body {
   font-size: 15px;
   font-family: inherit;
   flex: 1;
-  text-align: right;
+  min-width: 0;
+  text-align: left;
+  text-align-last: left;
+  padding-inline: 0 22px;
   /* native arrow on iOS / Android */
 }
 .control-select option {
   background: var(--bg-elev);
   color: var(--fg);
+  text-align: left;
+  direction: ltr;
 }
 
 .secondary-btn {
